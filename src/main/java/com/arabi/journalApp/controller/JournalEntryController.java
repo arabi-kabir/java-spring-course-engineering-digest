@@ -20,7 +20,7 @@ public class JournalEntryController {
 
     @PostMapping
     public boolean createEntry(@RequestBody JournalEntry journalEntry) {
-        journalEntries.put(journalEntry.getId(), journalEntry);
+//        journalEntries.put(journalEntry.getId(), journalEntry);
         return true;
     }
 

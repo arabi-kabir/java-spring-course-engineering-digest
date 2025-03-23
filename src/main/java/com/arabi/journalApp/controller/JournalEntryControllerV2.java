@@ -1,7 +1,9 @@
 package com.arabi.journalApp.controller;
 
 import com.arabi.journalApp.entity.JournalEntry;
+import com.arabi.journalApp.entity.User;
 import com.arabi.journalApp.service.JournalEntryService;
+import com.arabi.journalApp.service.UserService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,19 +18,24 @@ public class JournalEntryControllerV2 {
     @Autowired
     private JournalEntryService journalEntryService;
 
-    @GetMapping
-    public ResponseEntity<?> getAll() {
-       List<JournalEntry> all = journalEntryService.getJournalEntries();
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("/{userName}")
+    public ResponseEntity<?> getAllJournalEntriesOfUser(@PathVariable String userName) {
+        User user = userService.findByUsername(userName);
+       List<JournalEntry> all = user.getJournalEntries();
        if (all != null) {
            return new ResponseEntity<>(all, HttpStatus.OK);
        }
        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @PostMapping
-    public ResponseEntity<JournalEntry> createEntry(@RequestBody JournalEntry journalEntry) {
+    @PostMapping("/{userName}")
+    public ResponseEntity<JournalEntry> createEntry(@RequestBody JournalEntry journalEntry, @PathVariable String userName) {
         try {
-            journalEntryService.saveEntry(journalEntry);
+
+            journalEntryService.saveEntry(journalEntry, userName);
             return new ResponseEntity<>(journalEntry, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -45,13 +52,17 @@ public class JournalEntryControllerV2 {
     }
 
     @DeleteMapping("id/{myId}")
-    public ResponseEntity<?> removeEntryById(@PathVariable ObjectId myId) {
-        journalEntryService.deleteEntryById(myId);
+    public ResponseEntity<?> removeEntryById(@PathVariable ObjectId myId, @PathVariable String userName) {
+        journalEntryService.deleteEntryById(myId, userName);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PutMapping("id/{myId}")
-    public ResponseEntity<?> updateEntryById(@PathVariable ObjectId myId, @RequestBody JournalEntry updatedJournalEntry) {
+    public ResponseEntity<?> updateEntryById(
+            @PathVariable ObjectId myId,
+            @RequestBody JournalEntry updatedJournalEntry,
+            @PathVariable String userName
+    ) {
         JournalEntry oldJournalEntry = journalEntryService.findById(myId).orElse(null);
         if (oldJournalEntry != null) {
             oldJournalEntry.setTitle(updatedJournalEntry.getTitle() != null && !updatedJournalEntry.getTitle().equals("") ? updatedJournalEntry.getTitle() : oldJournalEntry.getTitle());
